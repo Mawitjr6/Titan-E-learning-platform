@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Titan Mini E-Learning Platform</title>
+  <title>Mini E-Learning Platform</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -68,55 +68,167 @@
       padding: 8px;
       background: #eee;
       border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .completed {
       color: green;
       font-weight: bold;
     }
+
+    .progress-container {
+      background: #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+      margin: 10px 0;
+      height: 20px;
+    }
+
+    .progress-bar {
+      background: #4CAF50;
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .login-box {
+      background: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    input {
+      padding: 10px;
+      width: 80%;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .logout-btn {
+      float: right;
+      background: #c0392b;
+    }
+
+    .logout-btn:hover {
+      background: #a93226;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>Titan mini E-Learning Platform</h1>
+    <h1>Mini E-Learning Platform</h1>
+    <button class="logout-btn" id="logoutBtn" style="display:none;">Logout</button>
   </header>
 
   <div class="container" id="app"></div>
 
   <script>
-    // Course data
-    const courses = [
+    const app = document.getElementById("app");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    // Default course template
+    const defaultCourses = [
       {
         id: 1,
         title: "HTML Basics",
-        lessons: ["Introduction", "Tags", "Attributes", "Forms"],
+        lessons: [
+          { title: "Introduction", done: false },
+          { title: "Tags", done: false },
+          { title: "Attributes", done: false },
+          { title: "Forms", done: false }
+        ],
         completed: false
       },
       {
         id: 2,
         title: "CSS Fundamentals",
-        lessons: ["Selectors", "Box Model", "Flexbox", "Grid"],
+        lessons: [
+          { title: "Selectors", done: false },
+          { title: "Box Model", done: false },
+          { title: "Flexbox", done: false },
+          { title: "Grid", done: false }
+        ],
         completed: false
       },
       {
         id: 3,
         title: "JavaScript Essentials",
-        lessons: ["Variables", "Functions", "DOM Manipulation", "Events"],
+        lessons: [
+          { title: "Variables", done: false },
+          { title: "Functions", done: false },
+          { title: "DOM Manipulation", done: false },
+          { title: "Events", done: false }
+        ],
         completed: false
       }
     ];
 
-    const app = document.getElementById("app");
+    let currentUser = localStorage.getItem("currentUser");
+    let courses = [];
+
+    // Save user data
+    function saveCourses() {
+      localStorage.setItem("courses_" + currentUser, JSON.stringify(courses));
+    }
+
+    // Load user data
+    function loadCourses() {
+      const saved = localStorage.getItem("courses_" + currentUser);
+      courses = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultCourses));
+      saveCourses();
+    }
+
+    // Render login page
+    function renderLogin() {
+      logoutBtn.style.display = "none";
+      app.innerHTML = `
+        <div class="login-box">
+          <h2>Login</h2>
+          <input type="text" id="username" placeholder="Enter username" />
+          <br>
+          <button onclick="login()">Login</button>
+        </div>
+      `;
+    }
+
+    // Login function
+    function login() {
+      const username = document.getElementById("username").value.trim();
+      if (!username) return alert("Please enter a username");
+      currentUser = username;
+      localStorage.setItem("currentUser", currentUser);
+      loadCourses();
+      renderHome();
+      logoutBtn.style.display = "inline-block";
+    }
+
+    // Logout function
+    logoutBtn.onclick = () => {
+      localStorage.removeItem("currentUser");
+      currentUser = null;
+      renderLogin();
+    };
 
     // Render home page
     function renderHome() {
-      app.innerHTML = "<h2>Available Courses</h2>";
+      app.innerHTML = `<h2>Welcome, ${currentUser}</h2><h3>Available Courses</h3>`;
       courses.forEach(course => {
+        const completedLessons = course.lessons.filter(l => l.done).length;
+        const progress = (completedLessons / course.lessons.length) * 100;
+
         const card = document.createElement("div");
         card.className = "course-card";
         card.innerHTML = `
           <h3>${course.title}</h3>
           <p>${course.lessons.length} lessons</p>
+          <div class="progress-container">
+            <div class="progress-bar" style="width:${progress}%"></div>
+          </div>
           <p>Status: ${course.completed ? "<span class='completed'>Completed</span>" : "In Progress"}</p>
         `;
         card.onclick = () => renderCourseDetail(course.id);
@@ -127,31 +239,60 @@
     // Render course detail page
     function renderCourseDetail(courseId) {
       const course = courses.find(c => c.id === courseId);
+      const completedLessons = course.lessons.filter(l => l.done).length;
+      const progress = (completedLessons / course.lessons.length) * 100;
+
       app.innerHTML = `
         <button class="back-btn" onclick="renderHome()">← Back</button>
         <h2>${course.title}</h2>
         <h4>Lessons:</h4>
+        <div class="progress-container">
+          <div class="progress-bar" style="width:${progress}%"></div>
+        </div>
       `;
-      course.lessons.forEach(lesson => {
+
+      course.lessons.forEach((lesson, index) => {
         const lessonDiv = document.createElement("div");
         lessonDiv.className = "lesson";
-        lessonDiv.textContent = lesson;
+        lessonDiv.innerHTML = `
+          <span>${lesson.title}</span>
+          <button ${lesson.done ? "disabled" : ""}>
+            ${lesson.done ? "Done" : "Mark Done"}
+          </button>
+        `;
+        lessonDiv.querySelector("button").onclick = () => {
+          course.lessons[index].done = true;
+          if (course.lessons.every(l => l.done)) {
+            course.completed = true;
+          }
+          saveCourses();
+          renderCourseDetail(courseId);
+        };
         app.appendChild(lessonDiv);
       });
 
       const completeBtn = document.createElement("button");
-      completeBtn.textContent = course.completed ? "Completed" : "Mark as Completed";
+      completeBtn.textContent = course.completed ? "Completed" : "Mark Course as Completed";
       completeBtn.disabled = course.completed;
       completeBtn.onclick = () => {
+        course.lessons.forEach(l => l.done = true);
         course.completed = true;
+        saveCourses();
         renderCourseDetail(courseId);
       };
       app.appendChild(completeBtn);
     }
 
     // Initialize
-    renderHome();
+    if (currentUser) {
+      loadCourses();
+      renderHome();
+      logoutBtn.style.display = "inline-block";
+    } else {
+      renderLogin();
+    }
   </script>
 </body>
 </html>
+
 
