@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Titan Mini E-Learning Platform</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+
+    header {
+      background: #4CAF50;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 800px;
+      margin: 20px auto;
+    }
+
+    .course-card {
+      background: white;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .course-card:hover {
+      transform: scale(1.02);
+      background: #f0f0f0;
+    }
+
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    .back-btn {
+      margin-bottom: 15px;
+      background: #555;
+    }
+
+    .back-btn:hover {
+      background: #333;
+    }
+
+    .lesson {
+      margin: 8px 0;
+      padding: 8px;
+      background: #eee;
+      border-radius: 4px;
+    }
+
+    .completed {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Titan mini E-Learning Platform</h1>
+  </header>
+
+  <div class="container" id="app"></div>
+
+  <script>
+    // Course data
+    const courses = [
+      {
+        id: 1,
+        title: "HTML Basics",
+        lessons: ["Introduction", "Tags", "Attributes", "Forms"],
+        completed: false
+      },
+      {
+        id: 2,
+        title: "CSS Fundamentals",
+        lessons: ["Selectors", "Box Model", "Flexbox", "Grid"],
+        completed: false
+      },
+      {
+        id: 3,
+        title: "JavaScript Essentials",
+        lessons: ["Variables", "Functions", "DOM Manipulation", "Events"],
+        completed: false
+      }
+    ];
+
+    const app = document.getElementById("app");
+
+    // Render home page
+    function renderHome() {
+      app.innerHTML = "<h2>Available Courses</h2>";
+      courses.forEach(course => {
+        const card = document.createElement("div");
+        card.className = "course-card";
+        card.innerHTML = `
+          <h3>${course.title}</h3>
+          <p>${course.lessons.length} lessons</p>
+          <p>Status: ${course.completed ? "<span class='completed'>Completed</span>" : "In Progress"}</p>
+        `;
+        card.onclick = () => renderCourseDetail(course.id);
+        app.appendChild(card);
+      });
+    }
+
+    // Render course detail page
+    function renderCourseDetail(courseId) {
+      const course = courses.find(c => c.id === courseId);
+      app.innerHTML = `
+        <button class="back-btn" onclick="renderHome()">← Back</button>
+        <h2>${course.title}</h2>
+        <h4>Lessons:</h4>
+      `;
+      course.lessons.forEach(lesson => {
+        const lessonDiv = document.createElement("div");
+        lessonDiv.className = "lesson";
+        lessonDiv.textContent = lesson;
+        app.appendChild(lessonDiv);
+      });
+
+      const completeBtn = document.createElement("button");
+      completeBtn.textContent = course.completed ? "Completed" : "Mark as Completed";
+      completeBtn.disabled = course.completed;
+      completeBtn.onclick = () => {
+        course.completed = true;
+        renderCourseDetail(courseId);
+      };
+      app.appendChild(completeBtn);
+    }
+
+    // Initialize
+    renderHome();
+  </script>
+</body>
+</html>
+
